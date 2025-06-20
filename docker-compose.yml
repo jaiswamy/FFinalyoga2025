@@ -1,0 +1,51 @@
+version : '2.4'
+services:
+  db:
+    image: mysql:5.6
+    container_name: Yogadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql123
+      MYSQL_DATABASE: db_idy
+      MYSQL_USER: inosurya
+      MYSQL_PASSWORD: InoSurya@HitpL2023
+    ports:
+      - "3314:3306"
+    volumes:
+     - ./Dump20250620.sql:/docker-entrypoint-initdb.d/Dump20250620.sql
+     - ./mysql/data:/var/lib/mysql
+     - ./mysql/conf.d:/etc/mysql/conf.d
+    networks:
+      - tomcat-network-Yoga
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -u root -pmysql123 -e 'SELECT 1'"]
+      interval: 10s
+      retries: 10
+      start_period: 40s
+
+
+  app:
+    build:
+      context: .
+    image: Yogaimage:latest
+    container_name: Yogaapp
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 512m
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_DB: db_idy
+      MYSQL_USER: inosurya
+      MYSQL_PASSWORD: InoSurya@HitpL2023
+    ports:
+      - "8085:8080"
+    networks:
+      - tomcat-network-Yoga
+
+
+networks:
+  tomcat-network-Yoga:
+    driver: bridge
